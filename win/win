@@ -1,0 +1,44 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+
+use v5.20.0;
+
+use File::Spec::Win32;
+use Cwd;
+
+my $samba_base = '/home/paul.webster';
+my $samba_letter = 'z:';
+my $passed_path = '.';
+
+if ($ARGV[0]) {
+    $passed_path = join(' ',@ARGV);
+}
+
+my $win_path = do {
+    my $linux_path = getcwd;
+
+    if ($passed_path =~ m%^/%) {
+        # Absolute path passed
+        if (-d $passed_path && $passed_path !~ m%/$%) {
+            $passed_path .= '/';
+        }
+        $linux_path = $passed_path;
+    }
+    elsif ($passed_path ne '.') {
+        # Must be a relative path, or direct file path
+        $linux_path .= '/'.$passed_path;
+    }
+
+    my ($resolute_path) = $linux_path =~ m/^\Q$samba_base\E(.*)$/i;
+
+    if (!$resolute_path) {
+        say STDERR "Path is outside of scope of samba path";
+        die;
+    }
+
+    $samba_letter.File::Spec::Win32->canonpath($resolute_path)
+};
+
+say $win_path;
