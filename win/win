@@ -30,12 +30,18 @@ my $win_path = do {
         # Must be a relative path, or direct file path
         $linux_path .= '/'.$passed_path;
     }
+    elsif ($passed_path eq '.') {
+        ($passed_path) = `pwd` =~ m/^(.*)\n/;
+    }
 
-    my ($resolute_path) = $linux_path =~ m/^\Q$samba_base\E(.*)$/i;
+    my ($base_match,$resolute_path) = $linux_path =~ m/^(\Q$samba_base\E)(.*)$/i;
 
-    if (!$resolute_path) {
+    if (!$base_match) {
         say STDERR "Path is outside of scope of samba path";
         die;
+    }
+    elsif (!$resolute_path) {
+        $resolute_path = '/';
     }
 
     $samba_letter.File::Spec::Win32->canonpath($resolute_path)
